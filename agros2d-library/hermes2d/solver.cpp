@@ -857,6 +857,10 @@ void Solver<Scalar>::solveInitialTimeStep()
     //Hermes::vector<SpaceSharedPtr<Scalar> > spaces = deepMeshAndSpaceCopy(actualSpaces(), false);
     Hermes::vector<MeshFunctionSharedPtr<Scalar> > solutions;
 
+
+    //todo: TODO
+    if(0)
+    {
     int totalComp = 0;
     foreach(Field* field, m_block->fields())
     {
@@ -867,6 +871,29 @@ void Solver<Scalar>::solveInitialTimeStep()
             ConstantSolution<double> *initial = new ConstantSolution<double>(mesh, field->fieldInfo()->initialCondition());
             solutions.push_back(initial);
             totalComp++;
+        }
+    }
+    }
+    else
+    {
+        int totalComp = 0;
+        solutions = createSolutions<Scalar>(spacesMeshes(actualSpaces()));
+        foreach(Field* field, m_block->fields())
+        {
+            for (int comp = 0; comp < field->fieldInfo()->numberOfSolutions(); comp++)
+            {
+                int ndofs = Space<Scalar>::get_num_dofs(actualSpaces().at(totalComp));
+                MeshSharedPtr mesh = actualSpaces().at(totalComp)->get_mesh();
+                int nvert = mesh->get_num_vertex_nodes();
+                Scalar* vec = new Scalar[ndofs];
+                memset(vec, 0, ndofs * sizeof(Scalar));
+                for (int i = 0; i < nvert; i++)
+                    vec[i] =1.;// (double)rand() / RAND_MAX;
+
+                Solution<Scalar>::vector_to_solution(vec, actualSpaces().at(totalComp), solutions.at(totalComp));
+                totalComp++;
+            }
+
         }
     }
 

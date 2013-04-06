@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<module:module xmlns:module="XMLModule" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="XMLModule ../xsd/module_xml.xsd">
+
+  <module:general id="turing" name="Turing model">
+    <module:description></module:description>
+    <module:analyses>
+      <module:analysis id="transient" name="Transient" solutions="2" type="transient" newton_tolerance="0.1" newton_steps="10" newton_damping_coef="1.0" newton_automatic_damping_coef="1.0" newton_steps_back="1"/>
+    </module:analyses>
+  </module:general>
+
+  <module:constants>
+    <module:constant id="EPS0" value="8.854e-12"/>
+  </module:constants>
+
+  <module:spaces>
+    <module:space analysistype="transient">
+    <module:space_config i="1" orderadjust="0" type="h1"/>
+    <module:space_config i="2" orderadjust="0" type="h1"/>
+    </module:space>
+  </module:spaces>
+
+
+  <module:volume>
+    <module:quantity id="turing_alpha" shortname="tu_al"/>
+    <module:quantity id="turing_beta" shortname="tu_be"/>
+    <module:quantity id="turing_gamma" shortname="tu_ga"/>
+    <module:quantity id="turing_delta" shortname="tu_de"/>
+    <module:quantity id="turing_D" shortname="tu_D"/>
+    <module:quantity id="turing_r2" shortname="tu_r2"/>
+    <module:quantity id="turing_r3" shortname="tu_r3"/>
+    <module:weakforms_volume>
+      <module:weakform_volume analysistype="transient" equation="">
+      <module:quantity id="turing_alpha"/>
+      <module:quantity id="turing_beta"/>
+      <module:quantity id="turing_gamma"/>
+      <module:quantity id="turing_delta"/>
+      <module:quantity id="turing_D"/>
+      <module:quantity id="turing_r2"/>
+      <module:quantity id="turing_r3"/>
+      <module:matrix_form axi_linear="0" axi_newton="0" i="1" id="laplace" j="1" planar_linear="0" planar_newton="timedermat * uval * vval + tu_D * tu_de * (udx*vdx + udy*vdy) - tu_al * uval * vval + tu_r2 * uval * value2 * vval + tu_al * tu_r3 * uval * value2 * value2 * vval"/>
+      <module:matrix_form axi_linear="0" axi_newton="0" i="2" id="laplace" j="2" planar_linear="0" planar_newton="timedermat * uval * vval +        tu_de * (udx*vdx + udy*vdy) - tu_be * uval * vval - tu_r2 * uval * value1 * vval - tu_al * tu_r3 * 2 * uval * value1 * value2 * vval"/>
+      <module:matrix_form axi_linear="0" axi_newton="0" i="1" id="laplace" j="2" planar_linear="0" planar_newton="-uval * vval"/>
+      <module:matrix_form axi_linear="0" axi_newton="0" i="2" id="laplace" j="1" planar_linear="0" planar_newton="-tu_ga * uval * vval"/>
+      <module:vector_form axi_linear="0" axi_newton="0" i="1" id="function" j="1" planar_linear="0" planar_newton="timedermat * upval * vval - timedervec * vval + tu_D * tu_de * (updx*vdx + updy*vdy) - tu_al * upval * vval - value2 * vval + tu_r2 * upval * value2 * vval + tu_al * tu_r3 * upval * value2 * value2 * vval"/>
+      <module:vector_form axi_linear="0" axi_newton="0" i="2" id="function" j="2" planar_linear="0" planar_newton="timedermat * upval * vval - timedervec * vval + tu_de * (updx*vdx + updy*vdy) - tu_ga * value1 * vval - tu_be * upval * vval - tu_r2 * upval * value1 * vval - tu_al * tu_r3 * upval * upval * value1 * vval"/>
+      </module:weakform_volume>
+    </module:weakforms_volume>
+  </module:volume>
+
+  <module:surface>
+    <module:quantity id="turing_nothing" shortname="V"/>
+    <module:weakforms_surface>
+    <module:weakform_surface analysistype="transient" default="zero_neum">
+      <module:boundary equation="" id="zero_neum" name="Zero Neumann">
+        <module:vector_form axi_linear="0" axi_newton="0" i="1" id="form" j="1" planar_linear="0" planar_newton="0"/>
+        <module:vector_form axi_linear="0" axi_newton="0" i="2" id="form" j="2" planar_linear="0" planar_newton="0"/>
+        </module:boundary>
+      </module:weakform_surface>
+    </module:weakforms_surface>
+  </module:surface>
+
+
+  <module:preprocessor>
+    <module:gui type="volume">
+      <module:group>
+      <module:quantity condition="" default="1" id="turing_alpha" name="alpha" shortname="alpha" shortname_html="&lt;i>&amp;alpha;&lt;/i>&lt;sub>r&lt;/sub>" shortname_latex="\alpha" unit="-" unit_html="-" unit_latex="-"/>
+      <module:quantity condition="" default="1" id="turing_beta" name="beta" shortname="beta" shortname_html="&lt;i>&amp;beta;&lt;/i>&lt;sub>r&lt;/sub>" shortname_latex="\beta" unit="-" unit_html="-" unit_latex="-"/>
+      <module:quantity condition="" default="1" id="turing_gamma" name="gamma" shortname="gamma" shortname_html="&lt;i>&amp;gamma;&lt;/i>&lt;sub>r&lt;/sub>" shortname_latex="\gamma" unit="-" unit_html="-" unit_latex="-"/>
+      <module:quantity condition="" default="1" id="turing_delta" name="delta" shortname="delta" shortname_html="&lt;i>&amp;delta;&lt;/i>&lt;sub>r&lt;/sub>" shortname_latex="\delta" unit="-" unit_html="-" unit_latex="-"/>
+      <module:quantity condition="" default="1" id="turing_D" name="D" shortname="D" shortname_html="&lt;i>&amp;D;&lt;/i>&lt;sub>r&lt;/sub>" shortname_latex="D" unit="-" unit_html="-" unit_latex="-"/>
+      <module:quantity condition="" default="1" id="turing_r2" name="r2" shortname="r2" shortname_html="&lt;i>&amp;r;&lt;/i>&lt;sub>2&lt;/sub>" shortname_latex="r_2" unit="-" unit_html="-" unit_latex="-"/>
+      <module:quantity condition="" default="1" id="turing_r3" name="r3" shortname="r3" shortname_html="&lt;i>&amp;r;&lt;/i>&lt;sub>3&lt;/sub>" shortname_latex="r_3" unit="-" unit_html="-" unit_latex="-"/>
+      </module:group>
+    </module:gui>
+    <module:gui type="surface">
+      <module:group>
+      <module:quantity condition="" default="1" id="turing_nothing" name="Nothing" shortname="nothing" shortname_html="&lt;i>&amp;alpha;&lt;/i>&lt;sub>r&lt;/sub>" shortname_latex="\alpha" unit="-" unit_html="-" unit_latex="-"/>
+      </module:group>
+    </module:gui>
+  </module:preprocessor>
+
+  <module:postprocessor>
+    <module:localvariables>
+    <module:localvariable id="turing_u" name="u" shortname="u" shortname_html="&lt;i>u&lt;/i>" shortname_latex="u" type="scalar" unit="-" unit_html="-" unit_latex="-">
+      <module:expression analysistype="transient" axi="0" planar="value1"/>
+    </module:localvariable>
+    <module:localvariable id="turing_v" name="v" shortname="v" shortname_html="&lt;i>v&lt;/i>" shortname_latex="v" type="scalar" unit="-" unit_html="-" unit_latex="-">
+      <module:expression analysistype="transient" axi="0" planar="value2"/>
+    </module:localvariable>
+    </module:localvariables>
+    <module:view>
+      <module:scalar_view>
+        <module:default analysistype="transient" id="turing_u"/>
+      </module:scalar_view>
+      <module:vector_view>
+        <module:default analysistype="transient" id="turing_u"/>
+      </module:vector_view>
+    </module:view>
+    <module:volumeintegrals>
+      <module:volumeintegral id="electrostatic_volume" name="Volume" shortname="V" shortname_html="&lt;i>V&lt;/i>" shortname_latex="V" unit="m3" unit_html="m&lt;sup>3&lt;/sup>" unit_latex="m^{3}">
+        <module:expression analysistype="transient" axi="2.0 * PI * r" planar="1.0"/>
+      </module:volumeintegral>
+    </module:volumeintegrals>
+    <module:surfaceintegrals>
+      <module:surfaceintegral id="electrostatic_length" name="Length" shortname="l" shortname_html="&lt;i>l&lt;/i>" shortname_latex="l" unit="m" unit_html="m" unit_latex="m">
+        <module:expression analysistype="transient" axi="1.0" planar="1.0"/>
+      </module:surfaceintegral>
+    </module:surfaceintegrals>
+    <module:force>
+      <module:expression analysistype="transient" axi_phi="0" axi_r="0" axi_z="0" planar_x="0" planar_y="0" planar_z="0"/>
+    </module:force>
+  </module:postprocessor>
+
+</module:module>
