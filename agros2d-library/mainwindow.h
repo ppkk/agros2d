@@ -30,6 +30,8 @@ class SceneViewPreprocessor;
 class SceneViewMesh;
 class SceneViewParticleTracing;
 class InfoWidget;
+class OptimizationWidget;
+class OptimizationControl;
 class SettingsWidget;
 class ProblemWidget;
 class ParticleTracingWidget;
@@ -200,6 +202,7 @@ private:
     SceneViewWidget *sceneViewPostParticleTracingWidget;
     SceneViewWidget *sceneViewBlankWidget;
     SceneViewWidget *sceneViewChartWidget;
+    SceneViewWidget *sceneViewOptimizationWidget;
 
     PostHermes *postHermes;
 
@@ -212,6 +215,7 @@ private:
     SceneViewParticleTracing *sceneViewParticleTracing;
     ChartView *sceneViewChart;
     QWidget *sceneViewBlank;
+    OptimizationWidget *optimizationContent;
 
     QWidget *viewControls;
     QStackedLayout *tabControlsLayout;
@@ -221,6 +225,7 @@ private:
     ChartWidget *chartWidget;
     ParticleTracingWidget *particleTracingWidget;
     SettingsWidget *settingsWidget;
+    OptimizationControl *optimizationControl;
 
     ResultsView *resultsView;
     PythonScriptingConsoleView *consoleView;

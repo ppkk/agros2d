@@ -36,6 +36,7 @@
 #include "sceneview_particle.h"
 #include "logview.h"
 #include "infowidget.h"
+#include "sceneview_optimization.h"
 #include "settings.h"
 #include "preprocessorview.h"
 #include "postprocessorview.h"
@@ -87,6 +88,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     sceneViewPost3D = new SceneViewPost3D(postHermes, this);
     sceneViewChart = new ChartView(this);
     sceneViewParticleTracing = new SceneViewParticleTracing(postHermes, this);
+    optimizationContent = new OptimizationWidget(sceneViewPreprocessor, this);
+    optimizationControl = new OptimizationControl(this);
     sceneViewBlank = new QLabel("", this);
 
     // scene - info widget
@@ -393,6 +396,7 @@ void MainWindow::createActions()
     actSceneModeGroup->addAction(sceneViewPost3D->actSceneModePost3D);
     actSceneModeGroup->addAction(sceneViewChart->actSceneModeChart);
     actSceneModeGroup->addAction(sceneViewParticleTracing->actSceneModeParticleTracing);
+    actSceneModeGroup->addAction(optimizationControl->actOptimization);
     actSceneModeGroup->addAction(settingsWidget->actSettings);
 
     actHideControlPanel = new QAction(icon("showhide"), tr("Show/hide control panel"), this);
@@ -482,6 +486,7 @@ void MainWindow::createMenus()
     mnuView->addAction(sceneViewPost3D->actSceneModePost3D);
     mnuView->addAction(sceneViewChart->actSceneModeChart);
     mnuView->addAction(sceneViewParticleTracing->actSceneModeParticleTracing);
+    mnuView->addAction(optimizationControl->actOptimization);
     mnuView->addAction(settingsWidget->actSettings);
     mnuView->addSeparator();
     mnuView->addAction(actHideControlPanel);
@@ -644,6 +649,7 @@ void MainWindow::createMain()
     sceneViewPost3DWidget = new SceneViewWidget(sceneViewPost3D, this);
     sceneViewPostParticleTracingWidget = new SceneViewWidget(sceneViewParticleTracing, this);
     sceneViewChartWidget = new SceneViewWidget(sceneViewChart, this);
+    sceneViewOptimizationWidget = new SceneViewWidget(optimizationContent, this);
 
     tabViewLayout = new QStackedLayout();
     tabViewLayout->setContentsMargins(0, 0, 0, 0);
@@ -655,6 +661,7 @@ void MainWindow::createMain()
     tabViewLayout->addWidget(sceneViewPost3DWidget);
     tabViewLayout->addWidget(sceneViewPostParticleTracingWidget);
     tabViewLayout->addWidget(sceneViewChartWidget);
+    tabViewLayout->addWidget(sceneViewOptimizationWidget);
 
     QWidget *viewWidget = new QWidget();
     viewWidget->setLayout(tabViewLayout);
@@ -667,6 +674,8 @@ void MainWindow::createMain()
     tabControlsLayout->addWidget(particleTracingWidget);
     tabControlsLayout->addWidget(chartWidget);
     tabControlsLayout->addWidget(settingsWidget);
+    tabControlsLayout->addWidget(optimizationControl);
+
 
     viewControls = new QWidget();
     viewControls->setLayout(tabControlsLayout);
@@ -704,6 +713,7 @@ void MainWindow::createMain()
     tlbLeftBar->addAction(sceneViewPost3D->actSceneModePost3D);
     tlbLeftBar->addAction(sceneViewParticleTracing->actSceneModeParticleTracing);
     tlbLeftBar->addAction(sceneViewChart->actSceneModeChart);
+    tlbLeftBar->addAction(optimizationControl->actOptimization);
     tlbLeftBar->addSeparator();
     tlbLeftBar->addAction(settingsWidget->actSettings);
     tlbLeftBar->addWidget(spacing);
@@ -1503,6 +1513,11 @@ void MainWindow::setControls()
     {
         tabViewLayout->setCurrentWidget(sceneViewChartWidget);
         tabControlsLayout->setCurrentWidget(chartWidget);
+    }
+    if (optimizationControl->actOptimization->isChecked())
+    {
+        tabViewLayout->setCurrentWidget(sceneViewOptimizationWidget);
+        tabControlsLayout->setCurrentWidget(optimizationControl);
     }
 
     if (settingsWidget->actSettings->isChecked())

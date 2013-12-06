@@ -111,6 +111,7 @@ SET(SOURCES value.cpp
     sceneview_post2d.cpp
     sceneview_post3d.cpp
     sceneview_particle.cpp
+    sceneview_optimization.cpp
     meshgenerator.cpp
     meshgenerator_triangle.cpp
     meshgenerator_gmsh.cpp
@@ -198,6 +199,7 @@ SET(SOURCES value.cpp
     sceneview_post2d.h
     sceneview_post3d.h
     sceneview_particle.h
+    sceneview_optimization.h
     meshgenerator.h
     meshgenerator_triangle.h
     meshgenerator_gmsh.h
