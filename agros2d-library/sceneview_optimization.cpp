@@ -71,10 +71,12 @@ void OptimizationControl::createControls()
     layoutGeneral->setColumnMinimumWidth(0, columnMinimumWidth());
     layoutGeneral->setColumnStretch(1, 1);
     layoutGeneral->addWidget(new QLabel(tr("Optimization:")), 0, 0);
-//    layoutGeneral->addWidget(cmbCoordinateType, 0, 1);
-//    layoutGeneral->addWidget(new QLabel(tr("Mesh type:")), 1, 0);
-//    layoutGeneral->addWidget(cmbMeshType, 1, 1);
 
+    sliderTransientAnimate = new QSlider(Qt::Horizontal);
+    sliderTransientAnimate->setTickPosition(QSlider::TicksBelow);
+    //connect(sliderTransientAnimate, SIGNAL(valueChanged(int)), this, SLOT(setTransientStep(int)));
+
+    layoutGeneral->addWidget(sliderTransientAnimate, 1, 0, 1, 3);
     QGroupBox *grpGeneral = new QGroupBox(tr("General"));
     grpGeneral->setLayout(layoutGeneral);
 
@@ -111,15 +113,30 @@ void OptimizationControl::updateControls()
 
 //*****************************************************************************************************************
 
-void OptimizationJavaScriptBridge::call(QString number)
+void OptimizationJavaScriptBridge::call(QString number, QString type)
 {
-    m_optimizationWidget->m_number = number;
+
+    m_optimizationWidget->setActiveNumber(number, type);
     m_optimizationWidget->runActualVariant();
     m_optimizationWidget->refresh();
 }
 
 const int numParameters = 8;
 const int numFunctionals = 2;
+
+void OptimizationWidget::setActiveNumber(QString number, QString variant)
+{
+    int num = number.toInt();
+    assert(num >= 0 && num < m_parametersList.size());
+    assert(m_parametersList.size() == m_resultsList.size());
+    if(variant == "front")
+        m_activeNumber = m_front.at(num);
+    else if(variant == "not_front")
+        m_activeNumber = m_notFront.at(num);
+    else
+        assert(0);
+
+}
 
 void OptimizationWidget::loadResults()
 {
@@ -136,30 +153,44 @@ void OptimizationWidget::loadResults()
             row.push_back(item);
         }
         m_parametersList.push_back(row);
-        qDebug() << row;
         row.clear();
         for(int i = 0; i < numFunctionals; i++)
         {
             fscanf(f, "%lf", &item);
             row.push_back(item);
         }
-        qDebug() << row;
         m_resultsList.push_back(row);
     }
     m_parametersList.pop_back();
     m_resultsList.pop_back();
+
+    for(int i = 0; i < m_resultsList.size(); i++)
+    {
+        bool front = true;
+        for(int j = 0; j < m_resultsList.size(); j++)
+        {
+            if((m_resultsList[i][0] < m_resultsList[j][0]) && (m_resultsList[i][1] > m_resultsList[j][1]))
+            {
+                front = false;
+                break;
+            }
+        }
+        if(front)
+            m_front.push_back(i);
+        else
+            m_notFront.push_back(i);
+    }
+    qDebug() << m_front;
+    qDebug() << m_notFront;
 }
 
 void OptimizationWidget::runActualVariant()
 {
-    int num = m_number.toInt();
-    assert(num >= 0 && num < m_parametersList.size());
-    assert(m_parametersList.size() == m_resultsList.size());
 
     //QString str = QString("import unittest as ut; agros2d_suite = ut.TestSuite(); import %1; agros2d_suite.addTest(ut.TestLoader().loadTestsFromTestCase(%1.%2)); agros2d_result = test_suite.scenario.Agros2DTestResult(); agros2d_suite.run(agros2d_result); agros2d_result_report = agros2d_result.report()").
     //        arg(module).arg(cls);
 
-    QList<double> parameterList = m_parametersList[num];
+    QList<double> parameterList = m_parametersList[m_activeNumber];
     QString parameters("[");
     for(int i = 0; i < numParameters; i++)
         parameters += QString("%1,").arg(parameterList[i]);
@@ -253,17 +284,34 @@ void OptimizationWidget::show()
 
     problemInfo.SetValue("GEOMETRY_SVG", generateSvgGeometry(Agros2D::scene()->edges->items(), 350).toStdString());
 
-    QString optimizationData = "[";
-    foreach(QList<double> row, m_resultsList)
+    if(m_activeNumber < m_resultsList.size())
     {
-        optimizationData += QString("[%1,%2], ")
+        problemInfo.SetValue("FUNC1", QString::number(m_resultsList[m_activeNumber][0]).toStdString());
+        problemInfo.SetValue("FUNC2", QString::number(m_resultsList[m_activeNumber][1]).toStdString());
+    }
+
+    QString optimizationDataFront = "[";
+    foreach(int index, m_front)
+    {
+        QList<double> row = m_resultsList[index];
+        optimizationDataFront += QString("[%1,%2], ")
                 .arg(row[0])
                 .arg(row[1]);
     }
-    optimizationData += "]";
-    problemInfo.SetValue("OPTIMIZATION_DATA", optimizationData.toStdString());
+    optimizationDataFront += "]";
+    problemInfo.SetValue("OPTIMIZATION_DATA_FRONT", optimizationDataFront.toStdString());
+    QString optimizationDataNotFront = "[";
+    foreach(int index, m_notFront)
+    {
+        QList<double> row = m_resultsList[index];
+        optimizationDataNotFront += QString("[%1,%2], ")
+                .arg(row[0])
+                .arg(row[1]);
+    }
+    optimizationDataNotFront += "]";
+    problemInfo.SetValue("OPTIMIZATION_DATA_NOT_FRONT", optimizationDataNotFront.toStdString());
 
-    problemInfo.SetValue("POINT_NUMBER", m_number.toStdString());
+    problemInfo.SetValue("POINT_NUMBER", QString::number(m_activeNumber).toStdString());
 
     ctemplate::ExpandTemplate(compatibleFilename(datadir() + TEMPLATEROOT + "/panels/optimization.tpl").toStdString(), ctemplate::DO_NOT_STRIP, &problemInfo, &info);
 

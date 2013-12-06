@@ -48,6 +48,9 @@ private:
 
     void fillComboBox();
 
+    QSlider *sliderTransientAnimate;
+
+
 private slots:
 };
 
@@ -61,7 +64,7 @@ class OptimizationJavaScriptBridge : public QObject {
 public:
 
     OptimizationJavaScriptBridge(OptimizationWidget* optimizationWidget) : m_optimizationWidget(optimizationWidget) {}
-    Q_INVOKABLE void call(QString number);
+    Q_INVOKABLE void call(QString number, QString type);
 
 private:
 
@@ -82,8 +85,9 @@ public:
 
     void loadResults();
     void runActualVariant();
+    void setActiveNumber(QString number, QString variant);
 
-    QString m_number;
+    int m_activeNumber;
 
 signals:
 
@@ -102,6 +106,8 @@ private:
 
     QList<QList<double> > m_parametersList;
     QList<QList<double> > m_resultsList;
+
+    QList<int> m_front, m_notFront;
 
 private slots:
     void show();

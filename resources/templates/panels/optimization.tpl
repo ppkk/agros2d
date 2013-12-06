@@ -40,8 +40,16 @@
 {
     $.plot($("#chart_optimization"), [
         {
-          data: {{OPTIMIZATION_DATA}},
+          data: {{OPTIMIZATION_DATA_NOT_FRONT}},
+          name: "not_front",
           color: "rgb(61, 61, 251)",
+          lines: { show: false },
+          points: { show: true }
+        },
+        {
+          data: {{OPTIMIZATION_DATA_FRONT}},
+          name: "front",
+          color: "rgb(251, 61, 61)",
           lines: { show: false },
           points: { show: true }
         }
@@ -55,16 +63,17 @@
     $("#chart_optimization").bind("plotclick", function (event, pos, item) {
                             if (item) {
                                     $("#clickdata").text(" - click point ");
-                                    ehbridge.call(item.dataIndex);
+                                    ehbridge.call(item.dataIndex, item.series.name);
                             }
                     });
 });
 </script>
 </div>
 </div>
-text:
-<span id="clickdata"></span>
-konec
+func1: {{FUNC1}}
+
+
+func2: {{FUNC2}}
 </div>
 </td>
 </tr>
