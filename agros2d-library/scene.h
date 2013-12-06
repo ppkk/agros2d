@@ -56,7 +56,7 @@ class Log;
 
 class PluginInterface;
 
-QString generateSvgGeometry(QList<SceneEdge *> edges);
+QString generateSvgGeometry(QList<SceneEdge *> edges, double size = 180);
 
 class AGROS_LIBRARY_API NewMarkerAction : public QAction
 {

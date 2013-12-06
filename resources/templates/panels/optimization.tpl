@@ -25,9 +25,7 @@
 <div class="section">
 <h2>XXX_nadpis1</h2>
 <hr/>
-number: {{POINT_NUMBER}}
-
-</div>
+<div class="figure">{{GEOMETRY_SVG}}</div></div>
 </td>
 
 <td>

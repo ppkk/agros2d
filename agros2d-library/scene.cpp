@@ -55,11 +55,10 @@
 
 #include "../resources_source/classes/problem_a2d_31_xml.h"
 
-QString generateSvgGeometry(QList<SceneEdge*> edges)
+QString generateSvgGeometry(QList<SceneEdge*> edges, double size)
 {
     RectPoint boundingBox = SceneEdgeContainer::boundingBox(edges);
 
-    double size = 180;
     double stroke_width = max(boundingBox.width(), boundingBox.height()) / size / 2.0;
 
     // svg

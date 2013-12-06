@@ -100,7 +100,8 @@ private:
     QStringList *m_recentProblemFiles;
     QStringList *m_recentScriptFiles;
 
-    QList<QList<double> > m_results;
+    QList<QList<double> > m_parametersList;
+    QList<QList<double> > m_resultsList;
 
 private slots:
     void show();

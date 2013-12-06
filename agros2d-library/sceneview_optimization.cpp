@@ -119,36 +119,50 @@ void OptimizationJavaScriptBridge::call(QString number)
 }
 
 const int numParameters = 8;
-const int numFunctionals = 10;
+const int numFunctionals = 2;
 
 void OptimizationWidget::loadResults()
 {
+    m_parametersList.clear();
+    m_resultsList.clear();
     FILE *f = fopen("/home/pkus/sources/data/optimization/data/population-70.txt", "r");
     while(!feof(f))
     {
         QList<double> row;
         double item;
-        for(int i = 0; i < numParameters + numFunctionals; i++)
+        for(int i = 0; i < numParameters; i++)
         {
             fscanf(f, "%lf", &item);
             row.push_back(item);
         }
-        m_results.push_back(row);
+        m_parametersList.push_back(row);
+        qDebug() << row;
+        row.clear();
+        for(int i = 0; i < numFunctionals; i++)
+        {
+            fscanf(f, "%lf", &item);
+            row.push_back(item);
+        }
+        qDebug() << row;
+        m_resultsList.push_back(row);
     }
+    m_parametersList.pop_back();
+    m_resultsList.pop_back();
 }
 
 void OptimizationWidget::runActualVariant()
 {
     int num = m_number.toInt();
-    assert(num >= 0 && num < m_results.size());
+    assert(num >= 0 && num < m_parametersList.size());
+    assert(m_parametersList.size() == m_resultsList.size());
 
     //QString str = QString("import unittest as ut; agros2d_suite = ut.TestSuite(); import %1; agros2d_suite.addTest(ut.TestLoader().loadTestsFromTestCase(%1.%2)); agros2d_result = test_suite.scenario.Agros2DTestResult(); agros2d_suite.run(agros2d_result); agros2d_result_report = agros2d_result.report()").
     //        arg(module).arg(cls);
 
-    QList<double> parametersList = m_results[num];
+    QList<double> parameterList = m_parametersList[num];
     QString parameters("[");
     for(int i = 0; i < numParameters; i++)
-        parameters += QString("%1,").arg(parametersList[i]);
+        parameters += QString("%1,").arg(parameterList[i]);
     parameters += "]";
 
     QString fileName("/home/pkus/sources/data/optimization/laser.py");
@@ -237,14 +251,14 @@ void OptimizationWidget::show()
     problemInfo.SetValue("NAME", QFileInfo(Agros2D::problem()->config()->fileName()).baseName().toStdString());
 
 
-    problemInfo.SetValue("GEOMETRY_SVG", generateSvgGeometry(Agros2D::scene()->edges->items()).toStdString());
+    problemInfo.SetValue("GEOMETRY_SVG", generateSvgGeometry(Agros2D::scene()->edges->items(), 350).toStdString());
 
     QString optimizationData = "[";
-    foreach(QList<double> row, m_results)
+    foreach(QList<double> row, m_resultsList)
     {
         optimizationData += QString("[%1,%2], ")
-                .arg(row[numParameters])
-                .arg(row[numParameters + 1]);
+                .arg(row[0])
+                .arg(row[1]);
     }
     optimizationData += "]";
     problemInfo.SetValue("OPTIMIZATION_DATA", optimizationData.toStdString());

@@ -1363,7 +1363,10 @@ void MainWindow::doPaste()
 
 void MainWindow::clear()
 {
-    problemWidget->actProperties->trigger();
+    // todo: commented out because of optimization!
+    // todo: it should be here, but optimization should be an exception
+
+    //problemWidget->actProperties->trigger();
 
     setControls();
 }
