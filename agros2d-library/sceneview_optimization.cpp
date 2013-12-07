@@ -254,6 +254,38 @@ void OptimizationWidget::loadResults()
 
         gen++;
     }
+
+    // find extrems
+    m_func1max = m_func2max = -1e20;
+    m_func1min = m_func2min = 1e20;
+    foreach(QList<double> res, m_resultsList)
+    {
+        if(res[0] > m_func1max)
+            m_func1max = res[0];
+        if(res[0] < m_func1min)
+            m_func1min = res[0];
+        if(res[1] > m_func2max)
+            m_func2max = res[1];
+        if(res[1] < m_func2min)
+            m_func2min = res[1];
+    }
+
+    m_func1maxFront = m_func2maxFront = -1e20;
+    m_func1minFront = m_func2minFront = 1e20;
+    foreach(QList<int> front, m_frontThisOnly)
+    {
+        foreach (int index, front) {
+            QList<double> res = m_resultsList[index];
+            if(res[0] > m_func1maxFront)
+                m_func1maxFront = res[0];
+            if(res[0] < m_func1minFront)
+                m_func1minFront = res[0];
+            if(res[1] > m_func2maxFront)
+                m_func2maxFront = res[1];
+            if(res[1] < m_func2minFront)
+                m_func2minFront = res[1];
+        }
+    }
 }
 
 void OptimizationWidget::runActualVariant()
@@ -289,6 +321,7 @@ OptimizationWidget::OptimizationWidget(SceneViewPreprocessor *sceneView, QWidget
     m_activeGeneration = 0;
     m_activeNumber = 0;
     m_showFrontWithPrevious = false;
+    m_concentrateOnFront = true;
 
     this->m_sceneViewGeometry = sceneView;
 
@@ -395,6 +428,21 @@ void OptimizationWidget::show()
     {
         templateValues.SetValue("FUNC1", QString::number(m_resultsList[m_activeNumber][0]).toStdString());
         templateValues.SetValue("FUNC2", QString::number(m_resultsList[m_activeNumber][1]).toStdString());
+    }
+
+    if(m_concentrateOnFront)
+    {
+        templateValues.SetValue("XMIN", QString::number(m_func1minFront).toStdString());
+        templateValues.SetValue("XMAX", QString::number(m_func1maxFront).toStdString());
+        templateValues.SetValue("YMIN", QString::number(m_func2minFront).toStdString());
+        templateValues.SetValue("YMAX", QString::number(m_func2maxFront).toStdString());
+    }
+    else
+    {
+        templateValues.SetValue("XMIN", QString::number(m_func1min).toStdString());
+        templateValues.SetValue("XMAX", QString::number(m_func1max).toStdString());
+        templateValues.SetValue("YMIN", QString::number(m_func2min).toStdString());
+        templateValues.SetValue("YMAX", QString::number(m_func2max).toStdString());
     }
 
     QString optimizationDataFront = "[";

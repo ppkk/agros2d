@@ -124,6 +124,10 @@ private:
     int frontSize();
     int notFrontSize();
 
+    bool m_concentrateOnFront;
+    double m_func1min, m_func1max, m_func2min, m_func2max;
+    double m_func1minFront, m_func1maxFront, m_func2minFront, m_func2maxFront;
+
 private slots:
     void show();
 

@@ -56,8 +56,8 @@
       ],
       {
         grid: { hoverable : true, clickable : true },
-        xaxes: [ { axisLabel: 'func 1 (-)' } ],
-        yaxes: [ { axisLabel: 'func 2 (-)' } ]
+        xaxes: [ { axisLabel: 'func 1 (-)',  min:{{XMIN}}, max:{{XMAX}} }],
+        yaxes: [ { axisLabel: 'func 2 (-)', min:{{YMIN}}, max:{{YMAX}} } ]
       });
 
     $("#chart_optimization").bind("plotclick", function (event, pos, item) {
