@@ -74,6 +74,7 @@ private:
 };
 
 
+
 class OptimizationWidget : public QWidget
 {
     Q_OBJECT
@@ -110,7 +111,18 @@ private:
     QList<QList<double> > m_parametersList;
     QList<QList<double> > m_resultsList;
 
-    QList<int> m_front, m_notFront;
+    bool m_showFrontWithPrevious;
+
+    QList<QList<int> > m_frontThisOnly;
+    QList<QList<int> > m_notFrontThisOnly;
+
+    QList<QList<int> > m_frontWithPrevious;
+    QList<QList<int> > m_notFrontWithPrevious;
+
+    int front(int index);
+    int notFront(int index);
+    int frontSize();
+    int notFrontSize();
 
 private slots:
     void show();

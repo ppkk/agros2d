@@ -133,9 +133,9 @@ void OptimizationWidget::setActiveNumber(QString number, QString variant)
     assert(num >= 0 && num < m_parametersList.size());
     assert(m_parametersList.size() == m_resultsList.size());
     if(variant == "front")
-        m_activeNumber = m_front.at(num);
+        m_activeNumber = front(num);
     else if(variant == "not_front")
-        m_activeNumber = m_notFront.at(num);
+        m_activeNumber = notFront(num);
     else
         assert(0);
 
@@ -147,50 +147,113 @@ void OptimizationWidget::generationChanged(int generation)
     refresh();
 }
 
+double difference(QList<double> a, QList<double> b)
+{
+    double dif = 0;
+
+    assert(a.size() == b.size());
+    for(int i = 0; i < a.size(); i++)
+        dif += fabs(a[i] - b[i]);
+    return dif;
+}
+
+const double TOL = 1e-5;
+bool areSame(QList<double> a, QList<double> b)
+{
+    return difference(a, b) < TOL;
+}
+
 void OptimizationWidget::loadResults()
 {
     m_parametersList.clear();
     m_resultsList.clear();
-    FILE *f = fopen("/home/pkus/sources/data/optimization/data/population-70.txt", "r");
-    while(!feof(f))
-    {
-        QList<double> row;
-        double item;
-        for(int i = 0; i < numParameters; i++)
-        {
-            fscanf(f, "%lf", &item);
-            row.push_back(item);
-        }
-        m_parametersList.push_back(row);
-        row.clear();
-        for(int i = 0; i < numFunctionals; i++)
-        {
-            fscanf(f, "%lf", &item);
-            row.push_back(item);
-        }
-        m_resultsList.push_back(row);
-    }
-    m_parametersList.pop_back();
-    m_resultsList.pop_back();
+    int gen = 0;
+    QString path("/home/pkus/sources/data/optimization/data");
+    FILE *f = nullptr;
+    QList<double> newParameters;
+    QList<double> newResults;
 
-    for(int i = 0; i < m_resultsList.size(); i++)
+    while(1)
     {
-        bool front = true;
-        for(int j = 0; j < m_resultsList.size(); j++)
+        QString fileName = QString("%1/population-%2.txt").arg(path).arg(gen);
+        qDebug() << fileName.toAscii();
+        f = fopen(fileName.toAscii(), "r");
+        if(f == nullptr)
+            break;
+
+        QList<int> newFrontThisOnly;
+        QList<int> newNotFrontThisOnly;
+
+        while(!feof(f))
         {
-            if((m_resultsList[i][0] < m_resultsList[j][0]) && (m_resultsList[i][1] > m_resultsList[j][1]))
+            bool doNotInclude = false;
+            QList<double> row;
+            double item;
+            for(int i = 0; i < numParameters; i++)
             {
-                front = false;
-                break;
+                if(fscanf(f, "%lf", &item) == 1)
+                    row.push_back(item);
+                else
+                    doNotInclude = true;
+            }
+            newParameters = row;
+            row.clear();
+            for(int i = 0; i < numFunctionals; i++)
+            {
+                if(fscanf(f, "%lf", &item) == 1)
+                    row.push_back(item);
+                else
+                    doNotInclude = true;
+            }
+            newResults = row;
+
+            if(!doNotInclude)
+            {
+                for(int index = 0; index < m_parametersList.size(); index++)
+                {
+                    QList<double> presentParameters = m_parametersList.at(index);
+                    if(areSame(presentParameters, newParameters))
+                    {
+                        doNotInclude = true;
+                        newNotFrontThisOnly.push_back(index);
+                    }
+                }
+            }
+            if(!doNotInclude)
+            {
+                m_parametersList.push_back(newParameters);
+                m_resultsList.push_back(newResults);
+
+                newNotFrontThisOnly.push_back(m_parametersList.size() - 1);
             }
         }
-        if(front)
-            m_front.push_back(i);
-        else
-            m_notFront.push_back(i);
+
+        QList<int> newFront;
+        QList<int> newNotFront;
+        for(int i = 0; i < m_resultsList.size(); i++)
+        {
+            bool front = true;
+            for(int j = 0; j < m_resultsList.size(); j++)
+            {
+                if((m_resultsList[i][0] < m_resultsList[j][0]) && (m_resultsList[i][1] > m_resultsList[j][1]))
+                {
+                    front = false;
+                    break;
+                }
+            }
+            if(front)
+                newFront.push_back(i);
+            else
+                newNotFront.push_back(i);
+        }
+        m_frontWithPrevious.push_back(newFront);
+        m_notFrontWithPrevious.push_back(newNotFront);
+        newFrontThisOnly = newFront;
+        m_frontThisOnly.push_back(newFrontThisOnly);
+        m_notFrontThisOnly.push_back(newNotFrontThisOnly);
+
+        gen++;
     }
-    qDebug() << m_front;
-    qDebug() << m_notFront;
 }
 
 void OptimizationWidget::runActualVariant()
@@ -202,7 +265,7 @@ void OptimizationWidget::runActualVariant()
     QList<double> parameterList = m_parametersList[m_activeNumber];
     QString parameters("[");
     for(int i = 0; i < numParameters; i++)
-        parameters += QString("%1,").arg(parameterList[i]);
+        parameters  += QString("%1,").arg(parameterList[i]);
     parameters += "]";
 
     QString fileName("/home/pkus/sources/data/optimization/laser.py");
@@ -223,6 +286,10 @@ void OptimizationWidget::runActualVariant()
 OptimizationWidget::OptimizationWidget(SceneViewPreprocessor *sceneView, QWidget *parent)
     : QWidget(parent), m_recentProblemFiles(NULL), m_recentScriptFiles(NULL)
 {
+    m_activeGeneration = 0;
+    m_activeNumber = 0;
+    m_showFrontWithPrevious = false;
+
     this->m_sceneViewGeometry = sceneView;
 
     // problem information
@@ -270,6 +337,37 @@ void OptimizationWidget::refresh()
     show();
 }
 
+int OptimizationWidget::front(int index)
+{
+    if(m_showFrontWithPrevious)
+        return m_frontWithPrevious.at(m_activeGeneration).at(index);
+    else
+        return m_frontThisOnly.at(m_activeGeneration).at(index);
+}
+
+int OptimizationWidget::notFront(int index)
+{
+    if(m_showFrontWithPrevious)
+        return m_notFrontWithPrevious.at(m_activeGeneration).at(index);
+    else
+        return m_notFrontThisOnly.at(m_activeGeneration).at(index);
+}
+
+int OptimizationWidget::frontSize()
+{
+    if(m_showFrontWithPrevious)
+        return m_frontWithPrevious.at(m_activeGeneration).size();
+    else
+        return m_frontThisOnly.at(m_activeGeneration).size();
+}
+
+int OptimizationWidget::notFrontSize()
+{
+    if(m_showFrontWithPrevious)
+        return m_notFrontWithPrevious.at(m_activeGeneration).size();
+    else
+        return m_notFrontThisOnly.at(m_activeGeneration).size();
+}
 
 void OptimizationWidget::show()
 {
@@ -300,24 +398,29 @@ void OptimizationWidget::show()
     }
 
     QString optimizationDataFront = "[";
-    foreach(int index, m_front)
+    QString optimizationDataNotFront = "[";
+    if((frontSize() > 0) || (notFrontSize() > 0))
     {
-        QList<double> row = m_resultsList[index];
-        optimizationDataFront += QString("[%1,%2], ")
-                .arg(row[0])
-                .arg(row[1]);
+        for(int i = 0; i < frontSize(); i++)
+        {
+            int index = front(i);
+            QList<double> row = m_resultsList[index];
+            optimizationDataFront += QString("[%1,%2], ")
+                    .arg(row[0])
+                    .arg(row[1]);
+        }
+        for(int i = 0; i < notFrontSize(); i++)
+        {
+            int index = notFront(i);
+            QList<double> row = m_resultsList[index];
+            optimizationDataNotFront += QString("[%1,%2], ")
+                    .arg(row[0])
+                    .arg(row[1]);
+        }
     }
     optimizationDataFront += "]";
-    templateValues.SetValue("OPTIMIZATION_DATA_FRONT", optimizationDataFront.toStdString());
-    QString optimizationDataNotFront = "[";
-    foreach(int index, m_notFront)
-    {
-        QList<double> row = m_resultsList[index];
-        optimizationDataNotFront += QString("[%1,%2], ")
-                .arg(row[0])
-                .arg(row[1]);
-    }
     optimizationDataNotFront += "]";
+    templateValues.SetValue("OPTIMIZATION_DATA_FRONT", optimizationDataFront.toStdString());
     templateValues.SetValue("OPTIMIZATION_DATA_NOT_FRONT", optimizationDataNotFront.toStdString());
 
     templateValues.SetValue("POINT_NUMBER", QString::number(m_activeNumber).toStdString());
