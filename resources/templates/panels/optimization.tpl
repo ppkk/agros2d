@@ -74,6 +74,8 @@ func1: {{FUNC1}}
 
 
 func2: {{FUNC2}}
+<hr/>
+generation: {{GENERATION}}
 </div>
 </td>
 </tr>

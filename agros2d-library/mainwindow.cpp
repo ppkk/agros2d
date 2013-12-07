@@ -90,6 +90,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     sceneViewParticleTracing = new SceneViewParticleTracing(postHermes, this);
     optimizationContent = new OptimizationWidget(sceneViewPreprocessor, this);
     optimizationControl = new OptimizationControl(this);
+    connect(optimizationControl, SIGNAL(sliderMoved(int)), optimizationContent, SLOT(generationChanged(int)));
     sceneViewBlank = new QLabel("", this);
 
     // scene - info widget

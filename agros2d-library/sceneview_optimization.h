@@ -38,6 +38,7 @@ public:
 
 signals:
     void changed();
+    void sliderMoved(int generation);
 
 public slots:
     void updateControls();
@@ -48,7 +49,7 @@ private:
 
     void fillComboBox();
 
-    QSlider *sliderTransientAnimate;
+    QSlider *sliderGeneration;
 
 
 private slots:
@@ -88,12 +89,14 @@ public:
     void setActiveNumber(QString number, QString variant);
 
     int m_activeNumber;
+    int m_activeGeneration;
 
 signals:
 
 public slots:
     void refresh();
     void javaScriptWindowObjectCleared();
+    void generationChanged(int generation);
 
 private:
     SceneViewPreprocessor *m_sceneViewGeometry;

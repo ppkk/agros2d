@@ -72,11 +72,14 @@ void OptimizationControl::createControls()
     layoutGeneral->setColumnStretch(1, 1);
     layoutGeneral->addWidget(new QLabel(tr("Optimization:")), 0, 0);
 
-    sliderTransientAnimate = new QSlider(Qt::Horizontal);
-    sliderTransientAnimate->setTickPosition(QSlider::TicksBelow);
+    sliderGeneration = new QSlider(Qt::Horizontal);
+    sliderGeneration->setTickPosition(QSlider::TicksBelow);
+    sliderGeneration->setMinimum(0);
+    sliderGeneration->setMaximum(70);
     //connect(sliderTransientAnimate, SIGNAL(valueChanged(int)), this, SLOT(setTransientStep(int)));
+    connect(sliderGeneration, SIGNAL(valueChanged(int)), this, SIGNAL(sliderMoved(int)));
 
-    layoutGeneral->addWidget(sliderTransientAnimate, 1, 0, 1, 3);
+    layoutGeneral->addWidget(sliderGeneration, 1, 0, 1, 3);
     QGroupBox *grpGeneral = new QGroupBox(tr("General"));
     grpGeneral->setLayout(layoutGeneral);
 
@@ -136,6 +139,12 @@ void OptimizationWidget::setActiveNumber(QString number, QString variant)
     else
         assert(0);
 
+}
+
+void OptimizationWidget::generationChanged(int generation)
+{
+    m_activeGeneration = generation;
+    refresh();
 }
 
 void OptimizationWidget::loadResults()
@@ -269,25 +278,25 @@ void OptimizationWidget::show()
 
     // template
     std::string info;
-    ctemplate::TemplateDictionary problemInfo("info");
+    ctemplate::TemplateDictionary templateValues("info");
 
-    problemInfo.SetValue("AGROS2D", "file:///" + compatibleFilename(QDir(datadir() + TEMPLATEROOT + "/panels/agros2d_logo.png").absolutePath()).toStdString());
+    templateValues.SetValue("AGROS2D", "file:///" + compatibleFilename(QDir(datadir() + TEMPLATEROOT + "/panels/agros2d_logo.png").absolutePath()).toStdString());
 
-    problemInfo.SetValue("STYLESHEET", m_cascadeStyleSheet.toStdString());
-    problemInfo.SetValue("PANELS_DIRECTORY", QUrl::fromLocalFile(QString("%1%2").arg(QDir(datadir()).absolutePath()).arg(TEMPLATEROOT + "/panels")).toString().toStdString());
+    templateValues.SetValue("STYLESHEET", m_cascadeStyleSheet.toStdString());
+    templateValues.SetValue("PANELS_DIRECTORY", QUrl::fromLocalFile(QString("%1%2").arg(QDir(datadir()).absolutePath()).arg(TEMPLATEROOT + "/panels")).toString().toStdString());
 
-    problemInfo.SetValue("BASIC_INFORMATION_LABEL", tr("Basic informations").toStdString());
+    templateValues.SetValue("BASIC_INFORMATION_LABEL", tr("Basic informations").toStdString());
 
-    problemInfo.SetValue("NAME_LABEL", tr("Name:").toStdString());
-    problemInfo.SetValue("NAME", QFileInfo(Agros2D::problem()->config()->fileName()).baseName().toStdString());
+    templateValues.SetValue("NAME_LABEL", tr("Name:").toStdString());
+    templateValues.SetValue("NAME", QFileInfo(Agros2D::problem()->config()->fileName()).baseName().toStdString());
 
 
-    problemInfo.SetValue("GEOMETRY_SVG", generateSvgGeometry(Agros2D::scene()->edges->items(), 350).toStdString());
+    templateValues.SetValue("GEOMETRY_SVG", generateSvgGeometry(Agros2D::scene()->edges->items(), 350).toStdString());
 
     if(m_activeNumber < m_resultsList.size())
     {
-        problemInfo.SetValue("FUNC1", QString::number(m_resultsList[m_activeNumber][0]).toStdString());
-        problemInfo.SetValue("FUNC2", QString::number(m_resultsList[m_activeNumber][1]).toStdString());
+        templateValues.SetValue("FUNC1", QString::number(m_resultsList[m_activeNumber][0]).toStdString());
+        templateValues.SetValue("FUNC2", QString::number(m_resultsList[m_activeNumber][1]).toStdString());
     }
 
     QString optimizationDataFront = "[";
@@ -299,7 +308,7 @@ void OptimizationWidget::show()
                 .arg(row[1]);
     }
     optimizationDataFront += "]";
-    problemInfo.SetValue("OPTIMIZATION_DATA_FRONT", optimizationDataFront.toStdString());
+    templateValues.SetValue("OPTIMIZATION_DATA_FRONT", optimizationDataFront.toStdString());
     QString optimizationDataNotFront = "[";
     foreach(int index, m_notFront)
     {
@@ -309,11 +318,13 @@ void OptimizationWidget::show()
                 .arg(row[1]);
     }
     optimizationDataNotFront += "]";
-    problemInfo.SetValue("OPTIMIZATION_DATA_NOT_FRONT", optimizationDataNotFront.toStdString());
+    templateValues.SetValue("OPTIMIZATION_DATA_NOT_FRONT", optimizationDataNotFront.toStdString());
 
-    problemInfo.SetValue("POINT_NUMBER", QString::number(m_activeNumber).toStdString());
+    templateValues.SetValue("POINT_NUMBER", QString::number(m_activeNumber).toStdString());
 
-    ctemplate::ExpandTemplate(compatibleFilename(datadir() + TEMPLATEROOT + "/panels/optimization.tpl").toStdString(), ctemplate::DO_NOT_STRIP, &problemInfo, &info);
+    templateValues.SetValue("GENERATION", QString::number(m_activeGeneration).toStdString());
+
+    ctemplate::ExpandTemplate(compatibleFilename(datadir() + TEMPLATEROOT + "/panels/optimization.tpl").toStdString(), ctemplate::DO_NOT_STRIP, &templateValues, &info);
 
     // setHtml(...) doesn't work
     // webView->setHtml(QString::fromStdString(info));
