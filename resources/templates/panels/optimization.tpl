@@ -23,18 +23,26 @@
 <tr>
 <td>
 <div class="section">
-<h2>XXX_nadpis1</h2>
+<h2>Design</h2>
 <hr/>
 <div class="figure">{{GEOMETRY_SVG}}</div></div>
+<h2>Parameters</h2>
+<hr/>
+<table>
+{{#PARAMETER_SECTION}}
+        <tr><td><b>{{PARAMETER_LABEL}}:</b></td><td>{{PARAMETER_VALUE}}</td></tr>
+{{/PARAMETER_SECTION}}
+</table>
+
 </td>
 
 <td>
 <div class="section">
-<h2>XXX_sloupec2</h2>
+<h2>Functionals</h2>
 <hr/>
 
 
-<div style="text-align: center; width: 400px; height: 400px;"> Optimization <br/>
+<div style="text-align: center; width: 400px; height: 400px;"> Pareto front <br/>
 <div id="chart_optimization" style="width: 100%; height: 90%;">
 <script type="text/javascript">$(function ()
 {
@@ -70,26 +78,19 @@
 </script>
 </div>
 </div>
-func1: {{FUNC1}}
 
+<table>
+        <tr><td><b>{{FUNC1_LABEL}}:</b></td><td>{{FUNC1}}</td></tr>
+        <tr><td><b>{{FUNC2_LABEL}}:</b></td><td>{{FUNC2}}</td></tr>
+        <tr><td><b>&nbsp;</b></td><td>&nbsp;</td></tr>
+        <tr><td><b>generation:</b></td><td>{{GENERATION}}</td></tr>
+</table>
 
-func2: {{FUNC2}}
-<hr/>
-generation: {{GENERATION}}
 </div>
 </td>
 </tr>
 </table>
 
-<div class="section">
-<h2>XXX_NadpisDole</h2>
-<hr/>
-{{#TRANSIENT_ADAPTIVE}}
-<div style="text-align: center; width: 50%; height: 160px;">Time step length<br/><div id="chart_time_step_length" style="width: 100%; height: 90%;"></div></div>
-{{TIME_STEPS_CHART}}
-{{/TRANSIENT_ADAPTIVE}}
-</div>
-</td>
 
 {{PROBLEM_DETAILS}}
 

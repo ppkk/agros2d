@@ -424,10 +424,22 @@ void OptimizationWidget::show()
 
     templateValues.SetValue("GEOMETRY_SVG", generateSvgGeometry(Agros2D::scene()->edges->items(), 350).toStdString());
 
+    // todo: load somehow from Python...
+    templateValues.SetValue("FUNC1_LABEL", "Functional 1");
+    templateValues.SetValue("FUNC2_LABEL", "Functional 2");
+
     if(m_activeNumber < m_resultsList.size())
     {
         templateValues.SetValue("FUNC1", QString::number(m_resultsList[m_activeNumber][0]).toStdString());
         templateValues.SetValue("FUNC2", QString::number(m_resultsList[m_activeNumber][1]).toStdString());
+    }
+
+    for(int i = 0; i < m_parametersList[m_activeNumber].size(); i++)
+    {
+        ctemplate::TemplateDictionary *parameterSection = templateValues.AddSectionDictionary("PARAMETER_SECTION");
+        // todo: load somehow from Python...
+        parameterSection->SetValue("PARAMETER_LABEL", "Parameter");
+        parameterSection->SetValue("PARAMETER_VALUE", QString::number(m_parametersList[m_activeNumber][i]).toStdString());
     }
 
     if(m_concentrateOnFront)
