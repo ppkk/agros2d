@@ -20,33 +20,22 @@
 #include "sceneview_optimization.h"
 
 #include "util/constants.h"
-#include "util/global.h"
-
 #include "gui/common.h"
 
-#include "scene.h"
-#include "scenebasic.h"
-#include "scenenode.h"
-#include "sceneedge.h"
-#include "scenelabel.h"
-#include "sceneview_common.h"
-#include "sceneview_geometry.h"
-#include "scenemarker.h"
-#include "scenemarkerdialog.h"
-#include "examplesdialog.h"
 #include "pythonlab/pythonengine_agros.h"
-#include "hermes2d/module.h"
-#include "hermes2d/coupling.h"
 
 #include "hermes2d/problem.h"
 #include "hermes2d/problem_config.h"
-#include "hermes2d/solutionstore.h"
 
 #include "ctemplate/template.h"
 
-#include "hermes2d.h"
+OptimizationSettings::OptimizationSettings()
+{
+    m_showPreviousGenerations = false;
+    m_concentrateOnFront = true;
+}
 
-OptimizationControl::OptimizationControl(QWidget *parent) : QWidget(parent)
+OptimizationControl::OptimizationControl(OptimizationSettings *settings, QWidget *parent) : QWidget(parent), m_settings(settings)
 {
     createActions();
     createControls();
@@ -70,7 +59,7 @@ void OptimizationControl::createControls()
     QGridLayout *layoutGeneral = new QGridLayout();
     layoutGeneral->setColumnMinimumWidth(0, columnMinimumWidth());
     layoutGeneral->setColumnStretch(1, 1);
-    layoutGeneral->addWidget(new QLabel(tr("Optimization:")), 0, 0);
+    //layoutGeneral->addWidget(new QLabel(tr("Optimization step:")), 0, 0);
 
     sliderGeneration = new QSlider(Qt::Horizontal);
     sliderGeneration->setTickPosition(QSlider::TicksBelow);
@@ -79,14 +68,38 @@ void OptimizationControl::createControls()
     //connect(sliderTransientAnimate, SIGNAL(valueChanged(int)), this, SLOT(setTransientStep(int)));
     connect(sliderGeneration, SIGNAL(valueChanged(int)), this, SIGNAL(sliderMoved(int)));
 
-    layoutGeneral->addWidget(sliderGeneration, 1, 0, 1, 3);
-    QGroupBox *grpGeneral = new QGroupBox(tr("General"));
+    QGroupBox *grpGeneral = new QGroupBox(tr("Optimization step"));
     grpGeneral->setLayout(layoutGeneral);
+
+    QGridLayout *layoutView = new QGridLayout();
+    layoutView->setColumnMinimumWidth(0, columnMinimumWidth());
+    layoutView->setColumnStretch(1, 1);
+
+    chkShowPreviousGen = new QCheckBox(tr("Show previous generations"));
+    chkConcentrateOnFront = new QCheckBox(tr("Concentrate on front"));
+
+    // todo: update only after Apply or allways?
+    connect(chkShowPreviousGen, SIGNAL(stateChanged(int)), this, SLOT(doApply()));
+    connect(chkConcentrateOnFront, SIGNAL(stateChanged(int)), this, SLOT(doApply()));
+
+    // controls
+    btnOK = new QPushButton();
+    //btnOK->setDefault(false);
+    btnOK->setText(tr("Apply"));
+    connect(btnOK, SIGNAL(clicked()), this, SLOT(doApply()));
+
+    layoutGeneral->addWidget(sliderGeneration, 1, 0, 1, 3);
+    layoutView->addWidget(chkShowPreviousGen, 2, 0);
+    layoutView->addWidget(chkConcentrateOnFront, 3, 0);
+
+    QGroupBox *grpView = new QGroupBox(tr("View settings"));
+    grpView->setLayout(layoutView);
 
 
     QVBoxLayout *layoutArea = new QVBoxLayout();
     layoutArea->setContentsMargins(0, 0, 0, 0);
     layoutArea->addWidget(grpGeneral);
+    layoutArea->addWidget(grpView);
 //    layoutArea->addWidget(new QLabel(tr("Optimization:")), 0, 0);
     layoutArea->addStretch(1);
 
@@ -101,12 +114,24 @@ void OptimizationControl::createControls()
     QVBoxLayout *layout= new QVBoxLayout();
     layout->setContentsMargins(2, 2, 2, 3);
     layout->addWidget(widgetArea);
+    layout->addWidget(btnOK, 0, Qt::AlignRight);
 
     setLayout(layout);
-  }
+
+    fillComboBox();
+}
+
+void OptimizationControl::doApply()
+{
+    m_settings->m_concentrateOnFront = chkConcentrateOnFront->isChecked();
+    m_settings->m_showPreviousGenerations = chkShowPreviousGen->isChecked();
+    emit changed();
+}
 
 void OptimizationControl::fillComboBox()
 {
+    chkConcentrateOnFront->setChecked(m_settings->m_concentrateOnFront);
+    chkShowPreviousGen->setChecked(m_settings->m_showPreviousGenerations);
 }
 
 void OptimizationControl::updateControls()
@@ -249,6 +274,10 @@ void OptimizationWidget::loadResults()
         m_frontWithPrevious.push_back(newFront);
         m_notFrontWithPrevious.push_back(newNotFront);
         newFrontThisOnly = newFront;
+        foreach(int index, newFrontThisOnly)
+            if(newNotFrontThisOnly.contains(index))
+                newNotFrontThisOnly.removeOne(index);
+
         m_frontThisOnly.push_back(newFrontThisOnly);
         m_notFrontThisOnly.push_back(newNotFrontThisOnly);
 
@@ -315,15 +344,11 @@ void OptimizationWidget::runActualVariant()
 
 }
 
-OptimizationWidget::OptimizationWidget(SceneViewPreprocessor *sceneView, QWidget *parent)
-    : QWidget(parent), m_recentProblemFiles(NULL), m_recentScriptFiles(NULL)
+OptimizationWidget::OptimizationWidget(OptimizationSettings* settings, QWidget *parent)
+    : QWidget(parent), m_recentProblemFiles(NULL), m_recentScriptFiles(NULL), m_settings(settings)
 {
     m_activeGeneration = 0;
     m_activeNumber = 0;
-    m_showFrontWithPrevious = false;
-    m_concentrateOnFront = true;
-
-    this->m_sceneViewGeometry = sceneView;
 
     // problem information
     webView = new QWebView();
@@ -372,7 +397,7 @@ void OptimizationWidget::refresh()
 
 int OptimizationWidget::front(int index)
 {
-    if(m_showFrontWithPrevious)
+    if(m_settings->m_showPreviousGenerations)
         return m_frontWithPrevious.at(m_activeGeneration).at(index);
     else
         return m_frontThisOnly.at(m_activeGeneration).at(index);
@@ -380,7 +405,7 @@ int OptimizationWidget::front(int index)
 
 int OptimizationWidget::notFront(int index)
 {
-    if(m_showFrontWithPrevious)
+    if(m_settings->m_showPreviousGenerations)
         return m_notFrontWithPrevious.at(m_activeGeneration).at(index);
     else
         return m_notFrontThisOnly.at(m_activeGeneration).at(index);
@@ -388,7 +413,7 @@ int OptimizationWidget::notFront(int index)
 
 int OptimizationWidget::frontSize()
 {
-    if(m_showFrontWithPrevious)
+    if(m_settings->m_showPreviousGenerations)
         return m_frontWithPrevious.at(m_activeGeneration).size();
     else
         return m_frontThisOnly.at(m_activeGeneration).size();
@@ -396,7 +421,7 @@ int OptimizationWidget::frontSize()
 
 int OptimizationWidget::notFrontSize()
 {
-    if(m_showFrontWithPrevious)
+    if(m_settings->m_showPreviousGenerations)
         return m_notFrontWithPrevious.at(m_activeGeneration).size();
     else
         return m_notFrontThisOnly.at(m_activeGeneration).size();
@@ -442,7 +467,7 @@ void OptimizationWidget::show()
         parameterSection->SetValue("PARAMETER_VALUE", QString::number(m_parametersList[m_activeNumber][i]).toStdString());
     }
 
-    if(m_concentrateOnFront)
+    if(m_settings->m_concentrateOnFront)
     {
         templateValues.SetValue("XMIN", QString::number(m_func1minFront).toStdString());
         templateValues.SetValue("XMAX", QString::number(m_func1maxFront).toStdString());

@@ -88,9 +88,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     sceneViewPost3D = new SceneViewPost3D(postHermes, this);
     sceneViewChart = new ChartView(this);
     sceneViewParticleTracing = new SceneViewParticleTracing(postHermes, this);
-    optimizationContent = new OptimizationWidget(sceneViewPreprocessor, this);
-    optimizationControl = new OptimizationControl(this);
+    OptimizationSettings* optimizationSettings = new OptimizationSettings;
+    optimizationContent = new OptimizationWidget(optimizationSettings, this);
+    optimizationControl = new OptimizationControl(optimizationSettings, this);
     connect(optimizationControl, SIGNAL(sliderMoved(int)), optimizationContent, SLOT(generationChanged(int)));
+    connect(optimizationControl, SIGNAL(changed()), optimizationContent, SLOT(refresh()));
     sceneViewBlank = new QLabel("", this);
 
     // scene - info widget

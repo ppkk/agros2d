@@ -26,13 +26,19 @@
 
 #include <QWebView>
 
-class SceneViewPreprocessor;
+class OptimizationSettings
+{
+public:
+    OptimizationSettings();
+    bool m_showPreviousGenerations;
+    bool m_concentrateOnFront;
+};
 
 class OptimizationControl: public QWidget
 {
     Q_OBJECT
 public:
-    OptimizationControl(QWidget *parent = 0);
+    OptimizationControl(OptimizationSettings *settings, QWidget *parent = 0);
 
     QAction *actOptimization;
 
@@ -42,6 +48,7 @@ signals:
 
 public slots:
     void updateControls();
+    void doApply();
 
 private:
     void createActions();
@@ -50,11 +57,15 @@ private:
     void fillComboBox();
 
     QSlider *sliderGeneration;
+    QCheckBox *chkShowPreviousGen;
+    QCheckBox *chkConcentrateOnFront;
 
+    QPushButton *btnOK;
+
+    OptimizationSettings* m_settings;
 
 private slots:
 };
-
 
 class OptimizationWidget;
 
@@ -80,7 +91,7 @@ class OptimizationWidget : public QWidget
     Q_OBJECT
 
 public:
-    OptimizationWidget(SceneViewPreprocessor *sceneView, QWidget *parent = 0);
+    OptimizationWidget(OptimizationSettings* settings, QWidget *parent = 0);
     ~OptimizationWidget();
 
     OptimizationJavaScriptBridge* m_bridge;
@@ -100,7 +111,6 @@ public slots:
     void generationChanged(int generation);
 
 private:
-    SceneViewPreprocessor *m_sceneViewGeometry;
     QString m_cascadeStyleSheet;
 
     QWebView *webView;
@@ -111,20 +121,19 @@ private:
     QList<QList<double> > m_parametersList;
     QList<QList<double> > m_resultsList;
 
-    bool m_showFrontWithPrevious;
-
     QList<QList<int> > m_frontThisOnly;
     QList<QList<int> > m_notFrontThisOnly;
 
     QList<QList<int> > m_frontWithPrevious;
     QList<QList<int> > m_notFrontWithPrevious;
 
+    OptimizationSettings* m_settings;
+
     int front(int index);
     int notFront(int index);
     int frontSize();
     int notFrontSize();
 
-    bool m_concentrateOnFront;
     double m_func1min, m_func1max, m_func2min, m_func2max;
     double m_func1minFront, m_func1maxFront, m_func2minFront, m_func2maxFront;
 
