@@ -161,9 +161,11 @@ void FieldInfo::createValuePointerTable()
 
 QList<QWeakPointer<Value> > FieldInfo::valuePointerTable(QString id) const
 {
-    assert(!m_valuePointersTable.isEmpty());
-    if(!m_valuePointersTable.contains(id))
+    if(m_valuePointersTable.isEmpty())
+        qDebug() << "empty table";
+    if(m_valuePointersTable.isEmpty() || (!m_valuePointersTable.contains(id)))
         qDebug() << "chci " << id;
+    assert(!m_valuePointersTable.isEmpty());
     assert(m_valuePointersTable.contains(id));
 
     return m_valuePointersTable[id];
